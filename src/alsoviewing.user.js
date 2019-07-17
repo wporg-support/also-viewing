@@ -10,8 +10,8 @@
 // @require       https://code.jquery.com/jquery-1.11.0.min.js
 // @require       https://viewing-server.herokuapp.com/socket.io/socket.io.js
 // @version       0.0.8.1
-// @updateURL     https://github.com/wporg-support/also-viewing/raw/master/src/wordpress-plugins-topic-highlighter.user.js
-// @downloadURL   https://github.com/wporg-support/also-viewing/raw/master/src/wordpress-plugins-topic-highlighter.user.js
+// @updateURL     https://github.com/wporg-support/also-viewing/raw/master/src/alsoviewing.user.js
+// @downloadURL   https://github.com/wporg-support/also-viewing/raw/master/src/alsoviewing.user.js
 // ==/UserScript==
 
 var socket,

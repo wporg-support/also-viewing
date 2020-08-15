@@ -171,6 +171,10 @@ function sendToServer() {
 					}
 
 					$("#viewing-top").text( userlistPretty + " " + ending);
+
+					if ( wp.a11y.speak ) {
+						wp.a11y.speak( userlistPretty + " " + ending );
+					}
 				}
 			}
 			else

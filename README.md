@@ -11,7 +11,9 @@ This is done to avoid overlapping replies, which can be confusing to end users, 
 
 ## Installation
 
-To install, open `/src/alsoviewing.user.js` and hit the Raw button. TamperMonkey or GreaseMonkey will take over from there.
+[![Download button](https://img.shields.io/badge/Install-UserScript-green)](https://github.com/wporg-support/also-viewing/raw/master/dist/alsoviewing.user.js)
+
+You can also visit the `/dist/alsoviewing.user.js` and click the **Raw** button. TamperMonkey or GreaseMonkey will take over from there.
 
 ## Contributing
 

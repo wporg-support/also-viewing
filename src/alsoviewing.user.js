@@ -2,7 +2,6 @@
 // @name          WordPress.org Also Viewing
 // @namespace     http://jason.stallin.gs
 // @description   See when another person is viewing the same post.
-// @grant         none
 // @include       https://*.wordpress.org/support/topic/*
 // @include       https://*.wordpress.org/support/view/*
 // @include       https://wordpress.org/support/topic/*
@@ -10,8 +9,10 @@
 // @require       https://code.jquery.com/jquery-1.11.0.min.js
 // @require       https://viewing-server.herokuapp.com/socket.io/socket.io.js
 // @version       0.0.8.1
+// @resource      configHtml https://raw.githubusercontent.com/wporg-support/also-viewing/master/dist/options.html
 // @updateURL     https://github.com/wporg-support/also-viewing/raw/master/src/alsoviewing.user.js
 // @downloadURL   https://github.com/wporg-support/also-viewing/raw/master/src/alsoviewing.user.js
+// @grant         GM_getResourceText
 // ==/UserScript==
 
 let socket,
@@ -19,13 +20,18 @@ let socket,
 	users,
 	$username,
 	username,
-	isAnonymous = false,
+	settings = {
+		isAnonymous: false
+	},
 	hasHadTyping = false,
 	allowDirectPost = true,
 	isTyping = false,
+	viewToken = ( Math.random() + 1 ).toString(36).substring(2,5),
 	NoLongerTyping;
 $(document).on('ready', function()
 {
+	loadSettings();
+
 	// Build the username and displaynames conditionally depending on what is available to us
 	if ( $('.username').length < 1 ) {
 		$username = $('.display-name').first();
@@ -34,19 +40,52 @@ $(document).on('ready', function()
 	}
 
 	// Bail if we didn't find a username.
-	if (!$username.length)
-	{
+	if ( ! $username.length && ! settings.isAnonymous ) {
 		return;
 	}
 
 	page = window.location.pathname;
 
 	sendToServer();
+
+	// Add options link to the sidebar.
+	$( '.entry-meta.sidebar div:first-of-type ul' ).append( '<li><a href="#" id="tamper-show-also-viewing-options">Also Viewing Options</a></li>' );
+
+	// Trigger options form display
+	$( '.entry-meta' ).on( 'click', '#tamper-show-also-viewing-options', function( e ) {
+		e.preventDefault();
+
+		$( '#bbpress-forums' ).prepend( GM_getResourceText( 'configHtml' ) );
+
+		$( '#tamper-wp-also-viewing-anonymize' ).prop( 'checked', settings.isAnonymous );
+	});
+
+	// Save options
+	$( '#page' ).on( 'submit', '#temper-wp-also-viewing-options', function( e ) {
+		e.preventDefault();
+
+		settings.isAnonymous = $( '#tamper-wp-also-viewing-anonymize' ).is( ':checked');
+
+		localStorage.setItem( 'wp_alsoviewing', JSON.stringify( settings ) );
+
+		$( this ).remove();
+	}).on( 'click', '.cancel', function( e ) {
+		e.preventDefault();
+		$( this ).closest( 'form' ).remove();
+	});
 });
+
+function loadSettings() {
+	let stored = localStorage.getItem( 'wp_alsoviewing' );
+
+	if ( null !== stored ) {
+		settings = JSON.parse( stored );
+	}
+}
 
 function prepareUsername() {
 	// Build the username.
-	if (!isAnonymous) {
+	if (!settings.isAnonymous) {
 		if ($('.username').length < 1) {
 			username = $username.text();
 		} else {
@@ -58,7 +97,7 @@ function prepareUsername() {
 			username = username + ' (' + $username.text() + ')';
 		}
 	} else {
-		username = "{" + "anonymous" + "}";
+		username = "{" + "anonymous_" + viewToken + "}";
 	}
 
 	if ( isTyping ) {
@@ -219,10 +258,7 @@ function transmitIsTyping() {
 
 	prepareUsername();
 
-	socket.disconnect();
-	socket.connect();
-
-	//sendToServer();
+	reconnectSocker();
 }
 
 function transmitNoLongerTyping() {
@@ -235,10 +271,12 @@ function transmitNoLongerTyping() {
 
 	prepareUsername();
 
+	reconnectSocker();
+}
+
+function reconnectSocker() {
 	socket.disconnect();
 	socket.connect();
-
-	//sendToServer();
 }
 
 //From: http://stackoverflow.com/a/1961068/2233771

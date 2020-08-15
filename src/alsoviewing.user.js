@@ -20,6 +20,8 @@ let socket,
 	$username,
 	username,
 	isAnonymous = false,
+	hasHadTyping = false,
+	allowDirectPost = true,
 	isTyping = false,
 	NoLongerTyping;
 $(document).on('ready', function()
@@ -124,6 +126,11 @@ function sendToServer() {
 						userlistPretty = userlistPretty + ' and ' + userlist.slice(-1);
 					}
 
+					if ( userlistPretty.includes( '[Typing...]' ) ) {
+						hasHadTyping = true;
+						allowDirectPost = false;
+					}
+
 					$("#viewing-top").text( userlistPretty + " " + ending);
 				}
 			}
@@ -165,6 +172,42 @@ $( '#bbp_reply_content' ).keydown(function() {
 		transmitNoLongerTyping();
 	}, 15000 );
 });
+$( 'body' ).on( 'submit', '#new-post', function( e ) {
+	if ( allowDirectPost ) {
+		return true;
+	}
+
+	e.preventDefault();
+
+	allowDirectPost = true;
+
+	let message = 'Another user has previously been working on a reply to this post, would you like to see any new replies first?';
+	let buttonPost = '<button type="submit" class="button">Just post my reply</button>';
+	let buttonShow = '<button type="button" id="reload-post-content" class="button button-primary">Show new replies</button>';
+
+	$( '.bbp-submit-wrapper' )
+		.css( 'margin-top', 'initial' )
+		.css( 'float', 'none' )
+		.html( message + '<br>' + buttonPost + '&nbsp;' + buttonShow );
+} ).on( 'click', '#reload-post-content', function() {
+	$.post(
+		window.location.href
+	).done(function(response) {
+		let content = $( '.bbp-replies', response ).html();
+		let pagination = $( '.bbp-pagination', response ).html();
+
+		$( '.bbp-replies' ).html( content );
+		$( '.bbp-pagination' ).html( pagination );
+	}).fail(function(response) {
+		let message = 'Could not look for new replies, please refresh the page manually.';
+		let buttonPost = '<button type="submit" class="button button-primary">Just post my reply</button>';
+
+		$( '.bbp-submit-wrapper' )
+			.css( 'margin-top', 'initial' )
+			.css( 'float', 'none' )
+			.html( message + '<br>' + buttonPost );
+	});
+} );
 
 function transmitIsTyping() {
 	// Avoid re-transmitting repeatedly, we only need to do so on state changes.

@@ -14,11 +14,12 @@
 // @downloadURL   https://github.com/wporg-support/also-viewing/raw/master/src/alsoviewing.user.js
 // ==/UserScript==
 
-var socket,
+let socket,
 	page,
 	users,
 	$username,
 	username,
+	isAnonymous = false,
 	isTyping = false,
 	NoLongerTyping;
 $(document).on('ready', function()
@@ -43,10 +44,19 @@ $(document).on('ready', function()
 
 function prepareUsername() {
 	// Build the username.
-	if ( $('.username').length < 1 ) {
-		username = $username.text();
+	if (!isAnonymous) {
+		if ($('.username').length < 1) {
+			username = $username.text();
+		} else {
+			username = $('.display-name').first().text();
+		}
+
+		// If the username isn't part of the displayname, append it.
+		if (!username.includes($username.text())) {
+			username = username + ' (' + $username.text() + ')';
+		}
 	} else {
-		username = $('.display-name').first().text() + ' (' + $username.text() + ')';
+		username = "{" + "anonymous" + "}";
 	}
 
 	if ( isTyping ) {
@@ -103,7 +113,7 @@ function sendToServer() {
 					if (!$("#viewing-top")[0])
 					{
 						$("#pagebody").css('margin-top', '50px');
-						$("#main").before('<div id="viewing-top" style="font-size: 14px; color: #fff; line-height: 30px; font-family: Helvetica,sans-serif; background: #d54e21; border-bottom: 1px solid #dfdfdf; width:100%; height:30px; text-align: center; position: initial; top: 32px; left: 0; z-index: 9999;">Jason Stallings is also viewing.</div>');
+						$("#main").before('<div id="viewing-top" style="font-size: 14px; color: #fff; line-height: 30px; font-family: Helvetica,sans-serif; background: #d54e21; border-bottom: 1px solid #dfdfdf; width:100%; height:30px; text-align: center; position: initial; top: 32px; left: 0; z-index: 9999;">Fnords are also viewing.</div>');
 					}
 
 					if ( userlist.length == 1 ) {
